@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,35 +6,95 @@
     <title>Fleet Route Optimizer - PostgreSQL + PostGIS</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg-start: #667eea;
+            --bg-end: #764ba2;
+            --text: #333;
+            --text-muted: #7f8c8d;
+            --header-bg: rgba(255, 255, 255, 0.95);
+            --header-shadow: rgba(0, 0, 0, 0.1);
+            --panel-bg: rgba(255, 255, 255, 0.95);
+            --panel-border: rgba(255, 255, 255, 0.2);
+            --panel-shadow: rgba(0, 0, 0, 0.1);
+            --heading: #2c3e50;
+            --label: #34495e;
+            --input-border: #ecf0f1;
+            --input-focus: #3498db;
+            --item-bg: #f8f9fa;
+            --item-border: #e9ecef;
+            --item-hover-bg: #e3f2fd;
+            --item-hover-border: #3498db;
+            --results-bg: #f8f9fa;
+            --route-bg: white;
+            --route-shadow: rgba(0, 0, 0, 0.1);
+            --api-bg: #e8f5e8;
+            --api-border: #c3e6c3;
+            --api-heading: #2d5a2d;
+            --api-text: #1e4620;
+            --algo-bg: white;
+            --algo-border: #ecf0f1;
+            --algo-active-bg: #e3f2fd;
+            --algo-active-border: #3498db;
+            --algo-active-color: #1976d2;
         }
+        [data-theme="dark"] {
+            --bg-start: #1a1a2e;
+            --bg-end: #16213e;
+            --text: #e4e4e7;
+            --text-muted: #a1a1aa;
+            --header-bg: rgba(30, 30, 46, 0.95);
+            --header-shadow: rgba(0, 0, 0, 0.3);
+            --panel-bg: rgba(30, 30, 46, 0.95);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --panel-shadow: rgba(0, 0, 0, 0.3);
+            --heading: #e4e4e7;
+            --label: #d4d4d8;
+            --input-border: #3f3f46;
+            --input-focus: #60a5fa;
+            --item-bg: #27272a;
+            --item-border: #3f3f46;
+            --item-hover-bg: #3f3f46;
+            --item-hover-border: #60a5fa;
+            --results-bg: #27272a;
+            --route-bg: #1f1f23;
+            --route-shadow: rgba(0, 0, 0, 0.2);
+            --api-bg: #1e3a2f;
+            --api-border: #166534;
+            --api-heading: #86efac;
+            --api-text: #bbf7d0;
+            --algo-bg: #27272a;
+            --algo-border: #3f3f46;
+            --algo-active-bg: #1e3a5f;
+            --algo-active-border: #60a5fa;
+            --algo-active-color: #93c5fd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
+            background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+            color: var(--text);
             min-height: 100vh;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         .header {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--header-bg);
             backdrop-filter: blur(10px);
             padding: 1rem 2rem;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 20px var(--header-shadow);
             margin-bottom: 2rem;
         }
 
         .header h1 {
-            color: #2c3e50;
+            color: var(--heading);
             font-size: 2rem;
             margin-bottom: 0.5rem;
         }
 
         .header .subtitle {
-            color: #7f8c8d;
+            color: var(--text-muted);
             font-size: 1rem;
             display: flex;
             align-items: center;
@@ -77,16 +137,16 @@
         }
 
         .panel {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--panel-bg);
             backdrop-filter: blur(10px);
             border-radius: 15px;
             padding: 1.5rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 8px 32px var(--panel-shadow);
+            border: 1px solid var(--panel-border);
         }
 
         .panel h3 {
-            color: #2c3e50;
+            color: var(--heading);
             margin-bottom: 1rem;
             font-size: 1.2rem;
             display: flex;
@@ -132,22 +192,21 @@
             gap: 0.5rem;
         }
 
-        .input-group label {
-            font-weight: 600;
-            color: #34495e;
-        }
+        .input-group label { font-weight: 600; color: var(--label); }
 
         .input-group input, .input-group select {
             padding: 0.75rem;
-            border: 2px solid #ecf0f1;
+            border: 2px solid var(--input-border);
             border-radius: 8px;
             font-size: 1rem;
+            background: var(--panel-bg);
+            color: var(--text);
             transition: border-color 0.3s;
         }
 
         .input-group input:focus, .input-group select:focus {
             outline: none;
-            border-color: #3498db;
+            border-color: var(--input-focus);
         }
 
         .btn {
@@ -199,17 +258,14 @@
             height: 500px;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 32px var(--panel-shadow);
         }
 
-        .vehicle-list, .delivery-list {
-            max-height: 300px;
-            overflow-y: auto;
-        }
+        .vehicle-list, .delivery-list { max-height: 300px; overflow-y: auto; }
 
         .vehicle-item, .delivery-item {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
+            background: var(--item-bg);
+            border: 1px solid var(--item-border);
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 0.5rem;
@@ -217,50 +273,37 @@
         }
 
         .vehicle-item:hover, .delivery-item:hover {
-            background: #e3f2fd;
-            border-color: #3498db;
+            background: var(--item-hover-bg);
+            border-color: var(--item-hover-border);
             transform: translateX(5px);
         }
 
-        .vehicle-item h4, .delivery-item h4 {
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
-        }
-
-        .vehicle-item p, .delivery-item p {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-            margin-bottom: 0.25rem;
-        }
+        .vehicle-item h4, .delivery-item h4 { color: var(--heading); margin-bottom: 0.5rem; }
+        .vehicle-item p, .delivery-item p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.25rem; }
 
         .optimization-results {
-            background: #f8f9fa;
+            background: var(--results-bg);
             border-radius: 8px;
             padding: 1rem;
             margin-top: 1rem;
+            color: var(--text);
         }
+        .optimization-results h4 { color: var(--heading); }
 
         .route-summary {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 0.75rem;
-            background: white;
+            background: var(--route-bg);
             border-radius: 6px;
             margin-bottom: 0.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px var(--route-shadow);
+            color: var(--text);
         }
 
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 2rem;
-            color: #7f8c8d;
-        }
-
-        .loading.show {
-            display: block;
-        }
+        .loading { display: none; text-align: center; padding: 2rem; color: var(--text-muted); }
+        .loading.show { display: block; }
 
         .algorithm-selector {
             display: grid;
@@ -271,9 +314,10 @@
 
         .algorithm-btn {
             padding: 0.5rem;
-            border: 2px solid #ecf0f1;
+            border: 2px solid var(--algo-border);
             border-radius: 6px;
-            background: white;
+            background: var(--algo-bg);
+            color: var(--text);
             cursor: pointer;
             transition: all 0.3s;
             text-align: center;
@@ -281,32 +325,24 @@
         }
 
         .algorithm-btn.active {
-            border-color: #3498db;
-            background: #e3f2fd;
-            color: #1976d2;
+            border-color: var(--algo-active-border);
+            background: var(--algo-active-bg);
+            color: var(--algo-active-color);
             font-weight: 600;
         }
 
-        .websocket-status {
-            font-size: 0.8rem;
-            color: #27ae60;
-        }
+        .websocket-status { font-size: 0.8rem; color: #27ae60; }
 
         .api-info {
-            background: #e8f5e8;
-            border: 1px solid #c3e6c3;
+            background: var(--api-bg);
+            border: 1px solid var(--api-border);
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 1rem;
         }
 
-        .api-info h4 {
-            color: #2d5a2d;
-            margin-bottom: 0.5rem;
-        }
-
-        .api-info p {
-            color: #1e4620;
+        .api-info h4 { color: var(--api-heading); margin-bottom: 0.5rem; }
+        .api-info p { color: var(--api-text);
             font-size: 0.9rem;
             margin-bottom: 0.25rem;
         }
@@ -329,11 +365,11 @@
 </head>
 <body>
     <div class="header">
-        <h1>🚛 Fleet Route Optimizer</h1>
+        <h1>≡ƒÜ¢ Fleet Route Optimizer</h1>
         <div class="subtitle">
             <span>PostgreSQL + PostGIS Spatial Database</span>
             <div class="status-indicator" id="dbStatus">
-                <span>🔄</span>
+                <span>≡ƒöä</span>
                 <span>Connecting...</span>
             </div>
             <div class="websocket-status" id="wsStatus">WebSocket: Disconnected</div>
@@ -344,19 +380,19 @@
         <div class="left-panel">
             <!-- API Information -->
             <div class="panel">
-                <h3>📊 Database Integration</h3>
+                <h3>≡ƒôè Database Integration</h3>
                 <div class="api-info">
-                    <h4>🗄️ PostgreSQL + PostGIS</h4>
-                    <p>✅ Spatial database with geographic calculations</p>
-                    <p>✅ GEOMETRY columns for vehicle/delivery locations</p>
-                    <p>✅ ST_Distance for accurate geographic routing</p>
-                    <p>✅ Redis caching for optimization results</p>
+                    <h4>≡ƒùä∩╕Å PostgreSQL + PostGIS</h4>
+                    <p>Γ£à Spatial database with geographic calculations</p>
+                    <p>Γ£à GEOMETRY columns for vehicle/delivery locations</p>
+                    <p>Γ£à ST_Distance for accurate geographic routing</p>
+                    <p>Γ£à Redis caching for optimization results</p>
                 </div>
             </div>
 
             <!-- Fleet Statistics -->
             <div class="panel">
-                <h3>📈 Fleet Statistics</h3>
+                <h3>≡ƒôê Fleet Statistics</h3>
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h4 id="totalVehicles">0</h4>
@@ -379,7 +415,7 @@
 
             <!-- Route Optimization -->
             <div class="panel">
-                <h3>🎯 Route Optimization</h3>
+                <h3>≡ƒÄ» Route Optimization</h3>
                 <div class="algorithm-selector">
                     <div class="algorithm-btn active" data-algorithm="clarke-wright">Clarke-Wright</div>
                     <div class="algorithm-btn" data-algorithm="astar">A* Pathfinding</div>
@@ -387,17 +423,17 @@
                     <div class="algorithm-btn" data-algorithm="advanced">Multi-Objective</div>
                 </div>
                 <button class="btn btn-success" onclick="optimizeRoutes()" style="width: 100%;">
-                    🚀 Optimize Routes with PostGIS
+                    ≡ƒÜÇ Optimize Routes with PostGIS
                 </button>
                 <div class="loading" id="optimizationLoading">
-                    <p>🔄 Running optimization with spatial calculations...</p>
+                    <p>≡ƒöä Running optimization with spatial calculations...</p>
                 </div>
                 <div id="optimizationResults"></div>
             </div>
 
             <!-- Add Vehicle -->
             <div class="panel">
-                <h3>➕ Add Vehicle</h3>
+                <h3>Γ₧ò Add Vehicle</h3>
                 <div class="controls">
                     <div class="input-group">
                         <label>Vehicle Name</label>
@@ -427,20 +463,20 @@
         <div class="right-panel">
             <!-- Map -->
             <div class="panel">
-                <h3>🗺️ Fleet Map with PostGIS Data</h3>
+                <h3>≡ƒù║∩╕Å Fleet Map with PostGIS Data</h3>
                 <div id="map"></div>
             </div>
 
             <!-- Vehicles and Deliveries -->
             <div style="display: flex; gap: 1.5rem;">
                 <div class="panel" style="flex: 1;">
-                    <h3>🚚 Vehicles from Database</h3>
+                    <h3>≡ƒÜÜ Vehicles from Database</h3>
                     <div class="vehicle-list" id="vehicleList">
                         <div class="loading show">Loading vehicles from PostgreSQL...</div>
                     </div>
                 </div>
                 <div class="panel" style="flex: 1;">
-                    <h3>📦 Deliveries from Database</h3>
+                    <h3>≡ƒôª Deliveries from Database</h3>
                     <div class="delivery-list" id="deliveryList">
                         <div class="loading show">Loading deliveries from PostgreSQL...</div>
                     </div>
@@ -481,7 +517,7 @@
             map = L.map('map').setView([37.7749, -122.4194], 12);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
+                attribution: '┬⌐ OpenStreetMap contributors'
             }).addTo(map);
 
             // Add map click handler for adding deliveries
@@ -505,17 +541,17 @@
                 
                 const statusElement = document.getElementById('dbStatus');
                 if (health.status === 'healthy') {
-                    statusElement.innerHTML = '<span>✅</span><span>PostgreSQL + PostGIS Connected</span>';
+                    statusElement.innerHTML = '<span>Γ£à</span><span>PostgreSQL + PostGIS Connected</span>';
                     statusElement.style.background = '#2ecc71';
                 } else {
                     throw new Error('API unhealthy');
                 }
                 
-                console.log('🏥 Health Check:', health);
+                console.log('≡ƒÅÑ Health Check:', health);
             } catch (error) {
-                console.error('❌ API Health Check Failed:', error);
+                console.error('Γ¥î API Health Check Failed:', error);
                 const statusElement = document.getElementById('dbStatus');
-                statusElement.innerHTML = '<span>❌</span><span>Database Disconnected</span>';
+                statusElement.innerHTML = '<span>Γ¥î</span><span>Database Disconnected</span>';
                 statusElement.style.background = '#e74c3c';
             }
         }
@@ -528,7 +564,7 @@
                 ws = new WebSocket('ws://localhost:3002');
                 
                 ws.onopen = function() {
-                    console.log('🔌 WebSocket connected');
+                    console.log('≡ƒöî WebSocket connected');
                     document.getElementById('wsStatus').textContent = 'WebSocket: Connected';
                     document.getElementById('wsStatus').style.color = '#27ae60';
                 };
@@ -536,22 +572,22 @@
                 ws.onmessage = function(event) {
                     const data = JSON.parse(event.data);
                     if (data.type === 'fleet_status') {
-                        console.log('📡 Real-time fleet update received');
+                        console.log('≡ƒôí Real-time fleet update received');
                         // Update UI with real-time data
                     }
                 };
                 
                 ws.onclose = function() {
-                    console.log('🔌 WebSocket disconnected');
+                    console.log('≡ƒöî WebSocket disconnected');
                     document.getElementById('wsStatus').textContent = 'WebSocket: Disconnected';
                     document.getElementById('wsStatus').style.color = '#e74c3c';
                 };
                 
                 ws.onerror = function(error) {
-                    console.error('❌ WebSocket error:', error);
+                    console.error('Γ¥î WebSocket error:', error);
                 };
             } catch (error) {
-                console.error('❌ WebSocket connection failed:', error);
+                console.error('Γ¥î WebSocket connection failed:', error);
             }
         }
 
@@ -578,13 +614,13 @@
                 updateFleetStatistics(statsData.data);
                 updateMapMarkers(vehiclesData.data, deliveriesData.data);
                 
-                console.log('📊 Fleet data loaded from PostgreSQL:', {
+                console.log('≡ƒôè Fleet data loaded from PostgreSQL:', {
                     vehicles: vehiclesData.data.length,
                     deliveries: deliveriesData.data.length
                 });
                 
             } catch (error) {
-                console.error('❌ Failed to load fleet data:', error);
+                console.error('Γ¥î Failed to load fleet data:', error);
             }
         }
 
@@ -601,7 +637,7 @@
             
             vehicleList.innerHTML = vehicles.map(vehicle => `
                 <div class="vehicle-item">
-                    <h4>🚚 ${vehicle.name}</h4>
+                    <h4>≡ƒÜÜ ${vehicle.name}</h4>
                     <p><strong>Type:</strong> ${vehicle.vehicleType}</p>
                     <p><strong>Capacity:</strong> ${vehicle.capacity} kg</p>
                     <p><strong>Status:</strong> ${vehicle.status}</p>
@@ -624,7 +660,7 @@
             
             deliveryList.innerHTML = deliveries.map(delivery => `
                 <div class="delivery-item">
-                    <h4>📦 ${delivery.address}</h4>
+                    <h4>≡ƒôª ${delivery.address}</h4>
                     <p><strong>Weight:</strong> ${delivery.weight} kg</p>
                     <p><strong>Priority:</strong> ${delivery.priority}</p>
                     <p><strong>Status:</strong> ${delivery.status}</p>
@@ -709,11 +745,11 @@
          */
         function getVehicleIcon(type) {
             const icons = {
-                truck: '🚛',
-                van: '🚐',
-                motorcycle: '🏍️'
+                truck: '≡ƒÜ¢',
+                van: '≡ƒÜÉ',
+                motorcycle: '≡ƒÅì∩╕Å'
             };
-            return `<div style="font-size: 20px; text-align: center; line-height: 30px;">${icons[type] || '🚚'}</div>`;
+            return `<div style="font-size: 20px; text-align: center; line-height: 30px;">${icons[type] || '≡ƒÜÜ'}</div>`;
         }
 
         /**
@@ -764,7 +800,7 @@
                 }
                 
             } catch (error) {
-                console.error('❌ Optimization failed:', error);
+                console.error('Γ¥î Optimization failed:', error);
                 resultsElement.innerHTML = `
                     <div style="color: #e74c3c; padding: 1rem; background: #fdf2f2; border-radius: 8px;">
                         <strong>Optimization Failed:</strong> ${error.message}
@@ -783,7 +819,7 @@
             
             resultsElement.innerHTML = `
                 <div class="optimization-results">
-                    <h4>🎯 Optimization Results (${metadata.algorithm})</h4>
+                    <h4>≡ƒÄ» Optimization Results (${metadata.algorithm})</h4>
                     <div class="route-summary">
                         <span>Total Distance: <strong>${data.totalDistance.toFixed(2)} km</strong></span>
                         <span>Duration: <strong>${(data.totalDuration / 60).toFixed(1)} hours</strong></span>
@@ -797,8 +833,8 @@
                         <span>Time: <strong>${metadata.optimizationTime}ms</strong></span>
                     </div>
                     <div class="route-summary" style="background: #e8f5e8;">
-                        <span>✅ Stored in PostgreSQL</span>
-                        <span>✅ Cached in Redis</span>
+                        <span>Γ£à Stored in PostgreSQL</span>
+                        <span>Γ£à Cached in Redis</span>
                     </div>
                 </div>
             `;
@@ -887,7 +923,7 @@
                 }
                 
             } catch (error) {
-                console.error('❌ Failed to add vehicle:', error);
+                console.error('Γ¥î Failed to add vehicle:', error);
                 alert('Failed to add vehicle: ' + error.message);
             }
         }
@@ -926,7 +962,7 @@
                 }
                 
             } catch (error) {
-                console.error('❌ Failed to add delivery:', error);
+                console.error('Γ¥î Failed to add delivery:', error);
                 alert('Failed to add delivery: ' + error.message);
             }
         }
