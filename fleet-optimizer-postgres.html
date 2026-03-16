@@ -396,7 +396,7 @@
                 <div class="websocket-status" id="wsStatus">WebSocket: Disconnected</div>
             </div>
         </div>
-        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle dark/light mode">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme">
             <span id="themeIcon">🌙</span>
             <span id="themeLabel">Dark Mode</span>
         </button>
@@ -519,6 +519,7 @@
         let routePolylines = [];
         let selectedAlgorithm = 'clarke-wright';
         let ws;
+        let tileLayer;
 
         const API_BASE = 'http://localhost:3001';
         const THEME_KEY = 'fleet-optimizer-theme';
@@ -538,6 +539,16 @@
             const label = document.getElementById('themeLabel');
             if (icon) icon.textContent = theme === THEME_DARK ? '☀️' : '🌙';
             if (label) label.textContent = theme === THEME_DARK ? 'Light Mode' : 'Dark Mode';
+            if (map && tileLayer) {
+                map.removeLayer(tileLayer);
+                const url = theme === THEME_DARK
+                    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+                const attr = theme === THEME_DARK
+                    ? '&copy; OpenStreetMap contributors &copy; CARTO'
+                    : '&copy; OpenStreetMap contributors';
+                tileLayer = L.tileLayer(url, { attribution: attr }).addTo(map);
+            }
         }
 
         function toggleTheme() {
@@ -559,9 +570,12 @@
         function initializeMap() {
             map = L.map('map').setView([37.7749, -122.4194], 12);
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
+            const theme = document.documentElement.getAttribute('data-theme') || THEME_LIGHT;
+            const url = theme === THEME_DARK
+                ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+            const attr = theme === THEME_DARK ? '&copy; OpenStreetMap contributors &copy; CARTO' : '&copy; OpenStreetMap contributors';
+            tileLayer = L.tileLayer(url, { attribution: attr }).addTo(map);
 
             // Add map click handler for adding deliveries
             map.on('click', function(e) {
